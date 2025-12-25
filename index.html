@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Juicio Secreto</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- AUDIO -->
+  <audio id="bgm" preload="auto" loop>
+    <source src="./assets/music.m4a" type="audio/mp4" />
+    <source src="./audio/bgm.mp3" type="audio/mpeg" />
+  </audio>
+
+  <!-- Gate si autoplay bloqueado -->
+  <div id="audioGate" class="audioGate hidden">
+    <div class="audioGateCard">
+      <div class="audioGateTitle">Audio bloqueado</div>
+      <div class="audioGateText">
+        Tu navegador bloqueó el autoplay. Toca el botón para arrancar la música.
+      </div>
+      <button id="audioGateBtn" class="bigBtn" type="button">▶ Activar música</button>
+      <div class="miniNote">Después usa 🔊/🔇 arriba (solo mute).</div>
+    </div>
+  </div>
+
+  <div class="cabinet">
+    <div class="topBar">
+      <div class="marquee">
+        <span>⚖️ Juicio Secreto · Ronda 1 (Privada) · Ronda 2 (Pública) · ⚖️</span>
+        <span>⚖️ Juicio Secreto · Ronda 1 (Privada) · Ronda 2 (Pública) · ⚖️</span>
+      </div>
+
+      <div class="topControls">
+        <div class="titleBlock">
+          <div class="logo">⚖️</div>
+          <div>
+            <h1>Juicio Secreto</h1>
+            <div class="sub">Aleatorio sin repetir juzgados. Luego se adivina.</div>
+          </div>
+        </div>
+
+        <div class="audioBox">
+          <div id="statusPill" class="statusPill">Listo</div>
+          <button id="muteBtn" class="iconBtn" type="button" title="Mute">
+            <span id="muteIcon">🔊</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell">
+      <aside class="side">
+        <div class="panel panelA">
+          <h2>Jugadores</h2>
+          <div id="playersChips" class="chips"></div>
+
+          <div class="sideBtns">
+            <button id="startRound1Btn" class="btn btnGreen" type="button">▶ Iniciar Ronda 1</button>
+            <button id="toRound2Btn" class="btn btnPurple" type="button">👀 Ir a Ronda 2</button>
+            <button id="wipeBtn" class="btn btnRed" type="button">🧨 Borrar todo</button>
+          </div>
+
+          <div class="miniNote">
+            Ronda 2 solo se habilita cuando termine la Ronda 1.
+          </div>
+        </div>
+
+        <div class="panel panelB">
+          <h2>Progreso</h2>
+          <div class="meter"><div id="progressBar"></div></div>
+          <div id="meterLabel" class="meterLabel">0/0</div>
+        </div>
+
+        <div class="panel panelC">
+          <h2>Reglas</h2>
+          <ol class="rules">
+            <li>Agrega jugadores.</li>
+            <li>Ronda 1: pasa el celular. Juez por turno.</li>
+            <li>OK → se revela a quién juzga.</li>
+            <li>Contesta 6 preguntas.</li>
+            <li>Ronda 2: se muestra 1 caso y todos adivinan.</li>
+          </ol>
+        </div>
+      </aside>
+
+      <main class="stage">
+        <!-- SETUP -->
+        <section id="screenSetup" class="screen">
+          <div class="screenHeader">
+            <div class="screenSticker">🧩</div>
+            <div>
+              <h2>Inicio: agrega jugadores</h2>
+              <p>Escribe un nombre y agrega. Luego inicia Ronda 1.</p>
+            </div>
+          </div>
+
+          <div class="startForm">
+            <input id="nameInput" class="input" placeholder="Nombre del jugador" autocomplete="off" />
+            <button id="addPlayerBtn" class="bigBtn" type="button">+ Agregar</button>
+          </div>
+
+          <div class="startHint">
+            Esto es local (localStorage). Sin servidor. Sin libs.
+          </div>
+        </section>
+
+        <!-- ROUND 1: CONFIRM -->
+        <section id="screenTurn" class="screen hidden">
+          <div class="screenHeader">
+            <div class="screenSticker">🎭</div>
+            <div>
+              <h2>Ronda 1</h2>
+              <p>Solo el jugador actual debe ver la pantalla.</p>
+            </div>
+          </div>
+
+          <div class="gameTop">
+            <div class="who">
+              <div class="whoBadge" id="judgeBadge">Juez: —</div>
+              <div class="counter" id="turnCounter">0/0</div>
+            </div>
+            <div class="counter" id="phasePill">Fase: Confirmación</div>
+          </div>
+
+          <div class="questionCard">
+            <div class="questionTitle">Paso 1</div>
+            <div class="q" id="turnText">Toca OK para revelar a quién juzgas.</div>
+          </div>
+
+          <div class="controls">
+            <button id="turnOkBtn" class="btn btnBlue" type="button">OK ✅</button>
+          </div>
+        </section>
+
+        <!-- ROUND 1: QUESTIONS -->
+        <section id="screenQuestions" class="screen hidden">
+          <div class="screenHeader">
+            <div class="screenSticker">📝</div>
+            <div>
+              <h2>Responde por la persona juzgada</h2>
+              <p id="targetLabel">Objetivo: —</p>
+            </div>
+          </div>
+
+          <div class="gameTop">
+            <div class="who">
+              <div class="whoBadge" id="judgeBadge2">Juez: —</div>
+              <div class="counter" id="qCounter">1/6</div>
+            </div>
+            <div class="counter">4 opciones por pregunta</div>
+          </div>
+
+          <div class="questionCard">
+            <div class="questionTitle" id="qTitle">Pregunta 1</div>
+            <div class="q" id="qText">—</div>
+          </div>
+
+          <div id="answers" class="answers"></div>
+
+          <div class="controls">
+            <button id="prevBtn" class="btn btnYellow" type="button">⬅ Atrás</button>
+            <button id="nextBtn" class="btn btnGreen" type="button">Siguiente ➡</button>
+          </div>
+        </section>
+
+        <!-- ROUND 1: DONE TURN -->
+        <section id="screenRound1Done" class="screen hidden">
+          <div class="screenHeader">
+            <div class="screenSticker">✅</div>
+            <div>
+              <h2>Turno guardado</h2>
+              <p>Pasa el celular al siguiente jugador.</p>
+            </div>
+          </div>
+
+          <div class="resultHeader">
+            <div class="medal">📦</div>
+            <div>
+              <div class="resultText" id="doneText">—</div>
+              <div class="tags" id="doneTags"></div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="nextTurnBtn" class="btn btnBlue" type="button">Siguiente turno ▶</button>
+            <button id="finishRound1Btn" class="btn btnPurple" type="button">Terminar Ronda 1</button>
+          </div>
+        </section>
+
+        <!-- ROUND 2 (simplificada: 1 caso a la vez) -->
+        <section id="screenRound2" class="screen hidden">
+          <div class="screenHeader">
+            <div class="screenSticker">👀</div>
+            <div>
+              <h2>Ronda 2: adivina quién es</h2>
+              <p>Se muestra un caso. Todos votan tocando un nombre.</p>
+            </div>
+          </div>
+
+          <div class="gameTop">
+            <div class="who">
+              <div class="whoBadge" id="caseCounterBadge">Caso 1/1</div>
+            </div>
+            <div class="controls" style="margin:0">
+              <button id="nextCaseBtn" class="btn btnOrange" type="button">Siguiente caso ▶</button>
+              <button id="restartRound2Btn" class="btn btnYellow" type="button">Reiniciar Ronda 2</button>
+            </div>
+          </div>
+
+          <div class="questionCard">
+            <div class="questionTitle" id="caseTitle">Caso</div>
+            <div class="q" id="caseSubtitle">Preguntas y respuestas</div>
+          </div>
+
+          <ul id="caseAnswers" class="review"></ul>
+
+          <div class="details">
+            <div><b>Vota quién era el juzgado:</b></div>
+            <div class="chips" id="voteChips"></div>
+            <div class="miniNote" id="voteResult">Toca un nombre para ver si acertaste.</div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- constants ANTES que app -->
+  <script src="./constants.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
